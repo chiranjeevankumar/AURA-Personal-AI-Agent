@@ -79,6 +79,12 @@ class SafetyEngine:
         )
 
         self.add_rule(
+            "web.open_result",
+            SafetyDecision.ALLOW,
+            "Opening a previously identified web result is normally safe."
+        )
+
+        self.add_rule(
             "files.read",
             SafetyDecision.PERMISSION,
             "Reading device files requires appropriate permission."

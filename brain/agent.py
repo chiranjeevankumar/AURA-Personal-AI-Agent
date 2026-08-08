@@ -22,6 +22,9 @@ from memory.manager import MemoryManager
 
 from tools.registry import ToolRegistry
 
+from memory.context_manager import ConversationContext
+from brain.followup_integration import FollowUpIntegration
+
 
 class AURAAgent:
 
@@ -55,6 +58,17 @@ class AURAAgent:
             else MemoryManager()
         )
 
+        # ----------------------------------------------------
+        # Conversational follow-up context
+        # ----------------------------------------------------
+
+        self.context = ConversationContext()
+
+        self.followup = FollowUpIntegration(
+            context=self.context,
+            executor=self.executor,
+        )
+
     # ========================================================
     # MAIN ENTRY POINT
     # ========================================================
@@ -64,6 +78,76 @@ class AURAAgent:
         text: str,
         confirmed: bool = False
     ) -> AgentResponse:
+
+        # ----------------------------------------------------
+        # Conversational follow-up path
+        # ----------------------------------------------------
+
+        followup = self.followup.handle(
+            text,
+            user_confirmed=confirmed,
+        )
+
+        if followup.handled:
+
+            self.context.add_user(
+                text
+            )
+
+            pipeline_result = followup.result
+
+            if pipeline_result.success:
+
+                message = pipeline_result.message
+
+                self.context.add_assistant(
+                    message,
+                    data={
+                        "type": "action_result",
+                        "tool": pipeline_result.action.tool
+                        if pipeline_result.action
+                        else None,
+                        "parameters": (
+                            pipeline_result.action.parameters
+                            if pipeline_result.action
+                            else {}
+                        ),
+                    },
+                )
+
+                self.memory.remember_recent(
+                    message,
+                    metadata={
+                        "type": "action_result"
+                    }
+                )
+
+                return AgentResponse(
+                    message=message,
+                    success=True,
+                    plan=None,
+                    results=[
+                        pipeline_result.execution_result
+                    ]
+                )
+
+            # Preserve confirmation/permission/block
+            # information instead of bypassing safety.
+
+            self.context.add_assistant(
+                pipeline_result.message,
+                data={
+                    "type": "pipeline_result",
+                    "stage": pipeline_result.stage,
+                },
+            )
+
+            return AgentResponse(
+                message=pipeline_result.message,
+                success=False,
+                plan=None,
+                results=[]
+            )
 
         request = UserRequest(
             text=text

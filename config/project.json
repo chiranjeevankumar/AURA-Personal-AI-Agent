@@ -1,0 +1,10 @@
+{
+    "name": "AURA",
+    "full_name": "AURA Personal AI Agent",
+    "version": "0.1.0",
+    "stage": "foundation",
+    "development_budget": "\u20b90",
+    "platform": "Android",
+    "development_environment": "Google Colab",
+    "repository": "GitHub"
+}

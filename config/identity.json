@@ -1,0 +1,29 @@
+{
+    "name": "AURA",
+    "type": "Personal AI Agent",
+    "version": "0.1.0",
+    "principles": [
+        "User-first",
+        "Permission-aware",
+        "Modular",
+        "Tool-based",
+        "Memory-enabled",
+        "Action-verifying",
+        "Privacy-conscious",
+        "Extensible"
+    ],
+    "activation": {
+        "wake_word": "Hey AURA",
+        "voice_enabled": true
+    },
+    "capabilities": {
+        "conversation": true,
+        "memory": true,
+        "voice": true,
+        "android_control": true,
+        "web": true,
+        "communication": true,
+        "automation": true,
+        "device_integration": true
+    }
+}

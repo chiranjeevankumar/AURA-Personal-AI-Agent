@@ -315,6 +315,33 @@ class AURAAgent:
 
         if last_result.success:
 
+            # ------------------------------------------------
+            # Record successful normal action in conversation
+            # context so future references can resolve it.
+            # ------------------------------------------------
+
+            if plan.actions:
+
+                last_action = plan.actions[-1]
+
+                self.context.add_user(
+                    text,
+                    data={
+                        "type": "action_request",
+                        "tool": last_action.tool,
+                        "parameters": last_action.parameters,
+                    },
+                )
+
+                self.context.add_assistant(
+                    last_result.message,
+                    data={
+                        "type": "action_result",
+                        "tool": last_action.tool,
+                        "parameters": last_action.parameters,
+                    },
+                )
+
             self.memory.remember_recent(
                 last_result.message,
                 metadata={

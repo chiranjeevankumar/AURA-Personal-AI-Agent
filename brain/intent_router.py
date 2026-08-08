@@ -1,16 +1,8 @@
 
 """
-AURA Intent Router v1.1
+AURA Intent Router v1.2
 
-Converts natural-language requests into structured intents.
-
-Important distinction:
-
-RiskLevel describes the risk of an action.
-
-SafetyDecision describes what AURA should do with that action.
-
-They are intentionally separate.
+Adds local memory recall capability.
 """
 
 import re
@@ -24,7 +16,10 @@ from brain.agent_models import (
 
 class IntentRouter:
 
-    def route(self, request: UserRequest) -> Intent:
+    def route(
+        self,
+        request: UserRequest
+    ) -> Intent:
 
         text = request.text.strip()
 
@@ -40,16 +35,88 @@ class IntentRouter:
         normalized = text.lower()
 
         # ====================================================
+        # RECALL
+        # ====================================================
+
+        # IMPORTANT:
+        # Check recall BEFORE remember.
+        #
+        # Example:
+        # "What do you remember about my project?"
+        # must become RECALL, not REMEMBER.
+
+        recall_patterns = [
+            r"\bwhat\s+do\s+you\s+remember\s+about\s+(.+)",
+            r"\bwhat\s+do\s+you\s+know\s+about\s+(.+)",
+            r"\brecall\s+(.+)",
+            r"\bremember\s+anything\s+about\s+(.+)",
+        ]
+
+        for pattern in recall_patterns:
+
+            match = re.search(
+                pattern,
+                normalized
+            )
+
+            if match:
+
+                return Intent(
+                    name="recall",
+                    confidence=0.95,
+                    parameters={
+                        "query": match.group(1).strip()
+                    },
+                    risk=RiskLevel.SAFE
+                )
+
+        # ====================================================
+        # REMEMBER
+        # ====================================================
+
+        remember_patterns = [
+            r"^\s*remember\s+that\s+(.+)",
+            r"^\s*remember\s+(.+)",
+            r"^\s*save\s+this\s+(.+)",
+        ]
+
+        for pattern in remember_patterns:
+
+            match = re.search(
+                pattern,
+                normalized
+            )
+
+            if match:
+
+                memory = match.group(1).strip()
+
+                # Do not treat:
+                # "remember about X"
+                # as a memory to save.
+
+                if memory.startswith("about "):
+
+                    continue
+
+                return Intent(
+                    name="remember",
+                    confidence=0.95,
+                    parameters={
+                        "memory": memory
+                    },
+                    risk=RiskLevel.SAFE
+                )
+
+        # ====================================================
         # OPEN APPLICATION
         # ====================================================
 
-        open_patterns = [
+        for pattern in [
             r"\bopen\s+(.+)",
             r"\blaunch\s+(.+)",
             r"\bstart\s+(.+)",
-        ]
-
-        for pattern in open_patterns:
+        ]:
 
             match = re.search(
                 pattern,
@@ -79,13 +146,11 @@ class IntentRouter:
         # WEB SEARCH
         # ====================================================
 
-        search_patterns = [
+        for pattern in [
             r"\bsearch\s+(?:for\s+)?(.+)",
             r"\blook\s+up\s+(.+)",
             r"\bfind\s+information\s+about\s+(.+)",
-        ]
-
-        for pattern in search_patterns:
+        ]:
 
             match = re.search(
                 pattern,
@@ -93,53 +158,43 @@ class IntentRouter:
             )
 
             if match:
-
-                query = match.group(1).strip()
 
                 return Intent(
                     name="web_search",
                     confidence=0.93,
                     parameters={
-                        "query": query
+                        "query": match.group(1).strip()
                     },
                     risk=RiskLevel.SAFE
                 )
 
         # ====================================================
-        # WHATSAPP MESSAGE
+        # WHATSAPP
         # ====================================================
 
-        whatsapp_patterns = [
+        whatsapp_pattern = (
             r"(?:send|message)\s+(.+?)"
             r"\s+(?:on\s+)?whatsapp"
-            r"\s+(?:saying|that)\s+(.+)",
+            r"\s+(?:saying|that)\s+(.+)"
+        )
 
-            r"whatsapp\s+(.+?)"
-            r"\s+(?:saying|that)\s+(.+)",
-        ]
+        match = re.search(
+            whatsapp_pattern,
+            normalized
+        )
 
-        for pattern in whatsapp_patterns:
+        if match:
 
-            match = re.search(
-                pattern,
-                normalized
+            return Intent(
+                name="send_message",
+                confidence=0.92,
+                parameters={
+                    "platform": "whatsapp",
+                    "recipient": match.group(1).strip(),
+                    "message": match.group(2).strip()
+                },
+                risk=RiskLevel.EXTERNAL_COMMUNICATION
             )
-
-            if match:
-
-                recipient = match.group(1).strip()
-                message = match.group(2).strip()
-
-                return Intent(
-                    name="send_message",
-                    confidence=0.92,
-                    parameters={
-                        "platform": "whatsapp",
-                        "recipient": recipient,
-                        "message": message
-                    },
-                    risk=RiskLevel.EXTERNAL_COMMUNICATION
-                )
 
         # ====================================================
         # EMAIL
@@ -159,58 +214,19 @@ class IntentRouter:
 
             if match:
 
-                recipient = match.group(1).strip()
-                message = match.group(2).strip()
-
                 return Intent(
                     name="send_email",
                     confidence=0.90,
                     parameters={
-                        "recipient": recipient,
-                        "message": message
+                        "recipient": match.group(1).strip(),
+                        "message": match.group(2).strip()
                     },
                     risk=RiskLevel.EXTERNAL_COMMUNICATION
                 )
 
         # ====================================================
-        # REMEMBER
-        # ====================================================
-
-        remember_patterns = [
-            r"\bremember\s+that\s+(.+)",
-            r"\bremember\s+(.+)",
-            r"\bsave\s+this\s+(.+)",
-        ]
-
-        for pattern in remember_patterns:
-
-            match = re.search(
-                pattern,
-                normalized
-            )
-
-            if match:
-
-                memory = match.group(1).strip()
-
-                return Intent(
-                    name="remember",
-                    confidence=0.95,
-                    parameters={
-                        "memory": memory
-                    },
-                    risk=RiskLevel.SAFE
-                )
-
-        # ====================================================
         # UNKNOWN
         # ====================================================
-
-        # Unknown does NOT mean "blocked".
-        # It simply means AURA does not understand the request yet.
-        #
-        # The Safety Engine will later decide whether an unknown
-        # capability needs permission.
 
         return Intent(
             name="unknown",

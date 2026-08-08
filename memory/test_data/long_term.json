@@ -1,0 +1,20 @@
+[
+  {
+    "id": "414dbbc0-d6a3-4ed7-b66f-adc6f0d4e24a",
+    "content": "AURA will have voice control.",
+    "memory_type": "project_feature",
+    "created_at": "2026-08-08T09:47:17.756767+00:00",
+    "updated_at": "2026-08-08T09:47:17.756767+00:00",
+    "importance": 0.8,
+    "metadata": {}
+  },
+  {
+    "id": "67c23673-cb8f-4767-9ca2-a83752d8ba3b",
+    "content": "AURA should work with Android.",
+    "memory_type": "project_feature",
+    "created_at": "2026-08-08T09:47:17.757458+00:00",
+    "updated_at": "2026-08-08T09:47:17.757458+00:00",
+    "importance": 0.8,
+    "metadata": {}
+  }
+]

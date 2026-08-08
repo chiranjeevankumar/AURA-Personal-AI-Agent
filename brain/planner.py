@@ -4,21 +4,9 @@ AURA Agent Planner
 
 Converts structured intents into executable plans.
 
-IMPORTANT:
-
-The Planner DOES NOT execute tools.
-
-It only decides what actions would be required.
-
-Execution happens later through:
-
-    Safety Engine
-          ↓
-    Tool Registry
-          ↓
-       Executor
+The Planner creates actions only.
+It never executes them.
 """
-
 
 from brain.agent_models import (
     UserRequest,
@@ -54,19 +42,14 @@ class AgentPlanner:
                 actions.append(
                     PlannedAction(
                         tool="android.open_app",
-
                         action="open_app",
-
                         parameters={
                             "application": application
                         },
-
                         risk=RiskLevel.SAFE,
-
                         requires_confirmation=False
                     )
                 )
-
 
         # ====================================================
         # WEB SEARCH
@@ -83,22 +66,17 @@ class AgentPlanner:
                 actions.append(
                     PlannedAction(
                         tool="web.search",
-
                         action="search",
-
                         parameters={
                             "query": query
                         },
-
                         risk=RiskLevel.SAFE,
-
                         requires_confirmation=False
                     )
                 )
 
-
         # ====================================================
-        # WHATSAPP MESSAGE
+        # WHATSAPP
         # ====================================================
 
         elif intent.name == "send_message":
@@ -120,20 +98,15 @@ class AgentPlanner:
                 actions.append(
                     PlannedAction(
                         tool="communication.whatsapp.send",
-
                         action="send",
-
                         parameters={
                             "recipient": recipient,
                             "message": message
                         },
-
                         risk=RiskLevel.EXTERNAL_COMMUNICATION,
-
                         requires_confirmation=True
                     )
                 )
-
 
         # ====================================================
         # EMAIL
@@ -152,23 +125,18 @@ class AgentPlanner:
             actions.append(
                 PlannedAction(
                     tool="communication.email.send",
-
                     action="send",
-
                     parameters={
                         "recipient": recipient,
                         "message": message
                     },
-
                     risk=RiskLevel.EXTERNAL_COMMUNICATION,
-
                     requires_confirmation=True
                 )
             )
 
-
         # ====================================================
-        # MEMORY
+        # REMEMBER
         # ====================================================
 
         elif intent.name == "remember":
@@ -177,36 +145,46 @@ class AgentPlanner:
                 "memory"
             )
 
-            actions.append(
-                PlannedAction(
-                    tool="memory.remember",
+            if memory:
 
-                    action="remember",
-
-                    parameters={
-                        "memory": memory
-                    },
-
-                    risk=RiskLevel.SAFE,
-
-                    requires_confirmation=False
+                actions.append(
+                    PlannedAction(
+                        tool="memory.remember",
+                        action="remember",
+                        parameters={
+                            "memory": memory
+                        },
+                        risk=RiskLevel.SAFE,
+                        requires_confirmation=False
+                    )
                 )
+
+        # ====================================================
+        # RECALL
+        # ====================================================
+
+        elif intent.name == "recall":
+
+            query = intent.parameters.get(
+                "query"
             )
 
+            if query:
+
+                actions.append(
+                    PlannedAction(
+                        tool="memory.recall",
+                        action="recall",
+                        parameters={
+                            "query": query
+                        },
+                        risk=RiskLevel.SAFE,
+                        requires_confirmation=False
+                    )
+                )
 
         # ====================================================
         # UNKNOWN
-        # ====================================================
-
-        elif intent.name == "unknown":
-
-            # No action is created.
-
-            actions = []
-
-
-        # ====================================================
-        # RETURN PLAN
         # ====================================================
 
         return AgentPlan(

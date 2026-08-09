@@ -9,6 +9,7 @@ from tools.registry import (
 
 from backend.android.apps import open_app
 from backend.web.search import search
+from communication.whatsapp import send as whatsapp_send
 
 
 def register_builtin_tools(
@@ -59,6 +60,31 @@ def register_builtin_tools(
                     }
                 },
                 handler=search,
+            )
+        )
+
+    if not registry.has("communication.whatsapp.send"):
+
+        registry.register(
+            ToolDefinition(
+                name="communication.whatsapp.send",
+                description="Send a WhatsApp message.",
+                category="communication",
+                risk_level="external_communication",
+                requires_confirmation=True,
+                parameters={
+                    "recipient": {
+                        "type": "string",
+                        "required": True,
+                        "description": "WhatsApp recipient.",
+                    },
+                    "message": {
+                        "type": "string",
+                        "required": True,
+                        "description": "WhatsApp message text.",
+                    },
+                },
+                handler=whatsapp_send,
             )
         )
 

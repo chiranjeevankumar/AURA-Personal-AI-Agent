@@ -8,6 +8,7 @@ from tools.registry import (
 )
 
 from backend.android.apps import open_app
+from backend.web.search import search
 
 
 def register_builtin_tools(
@@ -37,6 +38,27 @@ def register_builtin_tools(
                     }
                 },
                 handler=open_app,
+            )
+        )
+
+
+    if not registry.has("web.search"):
+
+        registry.register(
+            ToolDefinition(
+                name="web.search",
+                description="Search the web for information.",
+                category="web",
+                risk_level="safe",
+                requires_confirmation=False,
+                parameters={
+                    "query": {
+                        "type": "string",
+                        "required": True,
+                        "description": "Web search query.",
+                    }
+                },
+                handler=search,
             )
         )
 

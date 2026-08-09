@@ -62,7 +62,9 @@ class AURAAgent:
         # Conversational follow-up context
         # ----------------------------------------------------
 
-        self.context = ConversationContext()
+        self.context = ConversationContext(
+            memory_manager=self.memory
+        )
 
         self.followup = FollowUpIntegration(
             context=self.context,
@@ -113,13 +115,6 @@ class AURAAgent:
                             else {}
                         ),
                     },
-                )
-
-                self.memory.remember_recent(
-                    message,
-                    metadata={
-                        "type": "action_result"
-                    }
                 )
 
                 return AgentResponse(
@@ -341,13 +336,6 @@ class AURAAgent:
                         "parameters": last_action.parameters,
                     },
                 )
-
-            self.memory.remember_recent(
-                last_result.message,
-                metadata={
-                    "type": "action_result"
-                }
-            )
 
             return AgentResponse(
                 message=last_result.message,

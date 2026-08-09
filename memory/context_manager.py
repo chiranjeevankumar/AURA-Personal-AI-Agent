@@ -27,7 +27,8 @@ class ConversationContext:
 
     def __init__(
         self,
-        max_items: int = 20
+        max_items: int = 20,
+        memory_manager=None
     ):
 
         if max_items < 1:
@@ -36,7 +37,48 @@ class ConversationContext:
             )
 
         self.max_items = max_items
+        self.memory_manager = memory_manager
         self._items: List[ContextItem] = []
+
+        # ----------------------------------------------------
+        # Restore persisted conversational context.
+        # ----------------------------------------------------
+
+        if self.memory_manager is not None:
+
+            persisted = self.memory_manager.recent(
+                limit=max_items
+            )
+
+            for stored in reversed(persisted):
+
+                metadata = stored.metadata or {}
+
+                # Only restore records explicitly written by
+                # ConversationContext itself.
+                if not metadata.get(
+                    "conversation_context",
+                    False
+                ):
+                    continue
+
+                self._items.append(
+                    ContextItem(
+                        role=metadata.get(
+                            "role",
+                            "assistant"
+                        ),
+                        content=stored.content,
+                        data=metadata.get(
+                            "data",
+                            {}
+                        ),
+                        timestamp=metadata.get(
+                            "timestamp",
+                            stored.created_at
+                        )
+                    )
+                )
 
     def add(
         self,
@@ -52,6 +94,22 @@ class ConversationContext:
         )
 
         self._items.append(item)
+
+        # ----------------------------------------------------
+        # Persist context when a memory manager is available.
+        # ----------------------------------------------------
+
+        if self.memory_manager is not None:
+
+            self.memory_manager.remember_recent(
+                content=item.content,
+                metadata={
+                    "conversation_context": True,
+                    "role": item.role,
+                    "data": item.data,
+                    "timestamp": item.timestamp,
+                }
+            )
 
         if len(self._items) > self.max_items:
 

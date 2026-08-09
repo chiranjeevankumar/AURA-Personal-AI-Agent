@@ -12,3 +12,6 @@ build/
 dist/
 *.apk
 *.aab
+
+# AURA runtime memory
+memory/data/

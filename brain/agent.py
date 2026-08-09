@@ -21,6 +21,7 @@ from brain.executor import AgentExecutor
 from memory.manager import MemoryManager
 
 from tools.registry import ToolRegistry
+from tools.bootstrap import register_builtin_tools
 
 from memory.context_manager import ConversationContext
 from brain.followup_integration import FollowUpIntegration
@@ -36,6 +37,10 @@ class AURAAgent:
     ):
 
         self.registry = registry
+
+        register_builtin_tools(
+            self.registry
+        )
 
         self.router = IntentRouter()
 

@@ -20,6 +20,17 @@ from communication.service_capabilities import (
     get_all_service_capabilities,
 )
 
+from communication.operation_registry import (
+    list_operations,
+    get_operation,
+    get_all_operations,
+)
+
+from communication.operation_validator import (
+    validate_operation,
+    validate_whatsapp_send,
+)
+
 __all__ = [
     "send_whatsapp_message",
     "get_runtime_status",
@@ -32,10 +43,6 @@ __all__ = [
     "list_operations",
     "get_operation",
     "get_all_operations",
+    "validate_operation",
+    "validate_whatsapp_send",
 ]
-
-from communication.operation_registry import (
-    list_operations,
-    get_operation,
-    get_all_operations,
-)

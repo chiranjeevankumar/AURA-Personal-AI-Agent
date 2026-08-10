@@ -60,3 +60,8 @@ from communication.execution_decision import (
     decide_execution,
     decide_whatsapp_send,
 )
+
+from .execution_authorization import (
+    authorize_execution,
+    authorize_whatsapp_send,
+)

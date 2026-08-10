@@ -29,4 +29,13 @@ __all__ = [
     "get_all_service_status",
     "get_service_capabilities",
     "get_all_service_capabilities",
+    "list_operations",
+    "get_operation",
+    "get_all_operations",
 ]
+
+from communication.operation_registry import (
+    list_operations,
+    get_operation,
+    get_all_operations,
+)

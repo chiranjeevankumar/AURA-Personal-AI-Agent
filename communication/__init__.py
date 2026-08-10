@@ -46,3 +46,9 @@ __all__ = [
     "validate_operation",
     "validate_whatsapp_send",
 ]
+
+
+from communication.execution_preflight import (
+    preflight_operation,
+    preflight_whatsapp_send,
+)

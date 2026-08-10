@@ -32,6 +32,8 @@ from communication.operation_validator import (
 )
 
 __all__ = [
+    "preflight_whatsapp_send",
+    "preflight_operation",
     "send_whatsapp_message",
     "get_runtime_status",
     "get_whatsapp_status",
@@ -46,3 +48,8 @@ __all__ = [
     "validate_operation",
     "validate_whatsapp_send",
 ]
+
+from communication.execution_preflight import (
+    preflight_operation,
+    preflight_whatsapp_send,
+)

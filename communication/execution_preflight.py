@@ -1,9 +1,13 @@
 """
-Read-only execution preflight for AURA communication operations.
+Execution preflight checks for AURA communication operations.
 
-This module does not execute communication.
-It only determines whether a validated operation is
-currently eligible for execution.
+This module is read-only.
+
+It determines whether a validated communication operation
+is currently eligible for execution.
+
+No communication is performed here.
+No real service connection is created here.
 """
 
 from communication.operation_validator import validate_operation
@@ -11,19 +15,17 @@ from communication.runtime_status import get_runtime_status
 
 
 def preflight_operation(
-    service,
-    operation,
-    parameters=None,
-    confirmed=False,
-):
+    service: str,
+    operation: str,
+    parameters: dict,
+    confirmed: bool = False,
+) -> dict:
     """
-    Determine whether a communication operation is ready
+    Determine whether a communication operation is eligible
     for execution.
 
-    No communication is executed by this function.
+    No external action is performed.
     """
-
-    parameters = parameters or {}
 
     validation = validate_operation(
         service,
@@ -33,14 +35,10 @@ def preflight_operation(
 
     if not validation.get("valid", False):
         return {
-            "ready": False,
-            "service": service,
-            "operation": operation,
-            "error": validation.get(
-                "error",
-                "validation_failed",
-            ),
-            "validation": validation,
+            **validation,
+            "preflight": False,
+            "executable_now": False,
+            "reason": validation.get("error", "validation_failed"),
         }
 
     requires_confirmation = validation.get(
@@ -48,82 +46,64 @@ def preflight_operation(
         False,
     )
 
-    external_communication = validation.get(
-        "external_communication",
-        False,
-    )
-
     if requires_confirmation and not confirmed:
         return {
-            "ready": False,
-            "service": service,
-            "operation": operation,
-            "error": "confirmation_required",
-            "requires_confirmation": True,
-            "external_communication": external_communication,
-            "validation": validation,
+            **validation,
+            "preflight": False,
+            "executable_now": False,
+            "reason": "confirmation_required",
         }
 
     runtime = get_runtime_status(service)
 
-    runtime_available = runtime.get(
-        "available",
-        False,
-    )
-
-    executable = validation.get(
-        "executable",
-        False,
-    )
-
-    real_connection = runtime.get(
-        "real_connection",
-        False,
-    )
-
-    if not executable:
+    if not runtime.get("available", False):
         return {
-            "ready": False,
-            "service": service,
-            "operation": operation,
-            "error": "operation_not_executable",
-            "requires_confirmation": requires_confirmation,
-            "external_communication": external_communication,
-            "runtime": runtime,
+            **validation,
+            "preflight": False,
+            "executable_now": False,
+            "runtime_available": False,
+            "runtime": runtime.get("runtime", "unavailable"),
+            "reason": "runtime_unavailable",
         }
 
-    if not runtime_available:
+    if not runtime.get("executable", False):
         return {
-            "ready": False,
-            "service": service,
-            "operation": operation,
-            "error": "runtime_unavailable",
-            "requires_confirmation": requires_confirmation,
-            "external_communication": external_communication,
-            "runtime": runtime,
+            **validation,
+            "preflight": False,
+            "executable_now": False,
+            "runtime_available": runtime.get(
+                "available",
+                False,
+            ),
+            "runtime": runtime.get(
+                "runtime",
+                "unknown",
+            ),
+            "reason": "runtime_not_executable",
         }
 
     return {
-        "ready": True,
-        "service": service,
-        "operation": operation,
-        "parameters": parameters,
-        "requires_confirmation": requires_confirmation,
-        "confirmed": confirmed,
-        "external_communication": external_communication,
-        "runtime_available": runtime_available,
-        "runtime": runtime.get("runtime"),
-        "real_connection": real_connection,
+        **validation,
+        "preflight": True,
+        "executable_now": True,
+        "runtime_available": True,
+        "runtime": runtime.get(
+            "runtime",
+            "unknown",
+        ),
+        "reason": "ready",
     }
 
 
 def preflight_whatsapp_send(
-    recipient,
-    message,
-    confirmed=False,
-):
+    recipient: str,
+    message: str,
+    confirmed: bool = False,
+) -> dict:
     """
-    Convenience preflight for WhatsApp send_message.
+    Preflight a WhatsApp send operation.
+
+    No WhatsApp message is sent.
     """
 
     return preflight_operation(

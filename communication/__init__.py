@@ -65,3 +65,4 @@ from .execution_authorization import (
     authorize_execution,
     authorize_whatsapp_send,
 )
+from communication.execution_guard import guard_execution, guard_whatsapp_send

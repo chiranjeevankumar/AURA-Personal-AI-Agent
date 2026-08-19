@@ -173,6 +173,67 @@ class AURAAgent:
         )
 
         # ----------------------------------------------------
+        # Direct memory save
+        #
+        # Memory is an internal AURA capability. It is handled
+        # directly by MemoryManager rather than being sent to
+        # AgentExecutor as an external tool.
+        # ----------------------------------------------------
+
+        if intent.name == "remember":
+
+            memory_text = intent.parameters.get(
+                "memory",
+                ""
+            ).strip()
+
+            if not memory_text:
+
+                return AgentResponse(
+                    message="I need something to remember.",
+                    success=False,
+                    plan=None,
+                    results=[]
+                )
+
+            try:
+
+                self.memory.remember(
+                    memory_text,
+                    memory_type="fact",
+                    importance=0.8
+                )
+
+                self.memory.remember_recent(
+                    f"Saved memory: {memory_text}",
+                    metadata={
+                        "type": "memory_saved"
+                    }
+                )
+
+                return AgentResponse(
+                    message=(
+                        "I'll remember that: "
+                        + memory_text
+                    ),
+                    success=True,
+                    plan=None,
+                    results=[]
+                )
+
+            except Exception as error:
+
+                return AgentResponse(
+                    message=(
+                        "I couldn't save that memory: "
+                        + str(error)
+                    ),
+                    success=False,
+                    plan=None,
+                    results=[]
+                )
+
+        # ----------------------------------------------------
         # Direct memory recall
         # ----------------------------------------------------
 

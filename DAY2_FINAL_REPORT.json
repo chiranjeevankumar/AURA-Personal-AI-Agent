@@ -1,0 +1,22 @@
+{
+  "project": "AURA Personal AI Agent",
+  "version": "0.3.14",
+  "day": 2,
+  "repair": "IntentRouter request-type regression",
+  "status": "DAY_2_COMPLETE",
+  "timestamp_utc": "2026-08-19T14:11:24.303041+00:00",
+  "tests": {
+    "android_bridge_dry_run": true,
+    "android_open_app_dry_run": true,
+    "android_policy": true,
+    "android_tool_adapter": true,
+    "android_policy_block": true,
+    "core_open_app_intent": true,
+    "core_imports": true,
+    "core_android_safety": true,
+    "core_memory_regression": true,
+    "full_python_compilation": true
+  },
+  "adb_note": "ADB is optional for the Colab dry-run foundation. Physical Android execution requires an Android/ADB bridge.",
+  "backup": "/content/AURA_DAY2_REPAIR_BACKUP_20260819_141124"
+}
